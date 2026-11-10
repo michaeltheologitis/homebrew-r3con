@@ -1,0 +1,37 @@
+name: Check the cask
+description: >-
+  Style and audit the tap's r3con cask, install it as a first-time user would, check the
+  app's signature, notarization and version, then uninstall it. Run it after setup-homebrew,
+  which makes the checkout the tap.
+runs:
+  using: composite
+  steps:
+    - name: Style
+      shell: bash
+      run: brew style michaeltheologitis/r3con
+    - name: Audit
+      shell: bash
+      run: brew audit --cask --strict --online michaeltheologitis/r3con/r3con
+    # setup-homebrew trusts the whole tap; a user's first install trusts only the cask.
+    - name: Install as a user would
+      shell: bash
+      run: |
+        brew untrust michaeltheologitis/r3con
+        brew install michaeltheologitis/r3con/r3con
+    - name: Check the app's signature, notarization and version
+      shell: bash
+      run: |
+        app=/Applications/R3Con.app
+        codesign --verify --deep --strict --verbose=2 "$app"
+        verdict=$(spctl --assess --type execute --verbose=4 "$app" 2>&1) || { echo "$verdict"; exit 1; }
+        echo "$verdict"
+        grep -qx 'source=Notarized Developer ID' <<<"$verdict"
+        installed=$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist") || { echo "$installed"; exit 1; }
+        cask=$(brew info --cask --json=v2 michaeltheologitis/r3con/r3con | jq -r '.casks[0].version')
+        echo "installed: $installed, cask: $cask"
+        [ "$installed" = "$cask" ]
+    - name: Uninstall
+      shell: bash
+      run: |
+        brew uninstall --cask r3con
+        test ! -e /Applications/R3Con.app
