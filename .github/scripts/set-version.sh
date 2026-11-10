@@ -8,7 +8,7 @@ digest=$2
 cask=Casks/r3con.rb
 dmg=$(mktemp)
 trap 'rm -f "$dmg"' EXIT
-curl -sSfL -o "$dmg" "https://github.com/michaeltheologitis/r3con/releases/download/v$version/R3Con.dmg"
+curl -sSfL --retry 3 -o "$dmg" "https://github.com/michaeltheologitis/r3con/releases/download/v$version/R3Con.dmg"
 sha256=$(shasum -a 256 "$dmg" | cut -d ' ' -f 1)
 if [[ sha256:$sha256 != "$digest" ]]; then
   echo "R3Con.dmg hashes to sha256:$sha256, but the release API gives $digest" >&2
