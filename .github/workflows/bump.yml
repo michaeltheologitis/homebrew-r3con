@@ -1,0 +1,69 @@
+name: Bump
+
+on:
+  schedule:
+    - cron: "37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      bump: ${{ steps.release.outputs.bump }}
+      version: ${{ steps.release.outputs.version }}
+      digest: ${{ steps.release.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare r3con's latest release with the cask
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/check-release.sh >> "$GITHUB_OUTPUT"
+
+  bump:
+    needs: check
+    if: needs.check.outputs.bump == 'true'
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      # The tap is a symlink to this checkout, so brew installs the cask as edited below.
+      - name: Set up Homebrew with this repository as its tap
+        uses: Homebrew/actions/setup-homebrew@63a2d4d8d4193eab3e62b1b782ff3ab8408f5b29 # 2026.11.09.1
+      - name: Point the cask at the release
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          DIGEST: ${{ needs.check.outputs.digest }}
+        run: .github/scripts/set-version.sh "$VERSION" "$DIGEST"
+      - name: Check the cask
+        uses: ./.github/actions/check-cask
+
+  push:
+    needs: [check, bump]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Point the cask at the release
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          DIGEST: ${{ needs.check.outputs.digest }}
+        run: .github/scripts/set-version.sh "$VERSION" "$DIGEST"
+      - name: Commit and push to main
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Bump r3con to $VERSION" -- Casks/r3con.rb
+          git push origin HEAD:main
