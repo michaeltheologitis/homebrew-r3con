@@ -23,6 +23,10 @@ runs:
       run: |
         app=/Applications/R3Con.app
         codesign --verify --deep --strict --verbose=2 "$app"
+        signature=$(codesign -dv --verbose=2 "$app" 2>&1) || { echo "$signature"; exit 1; }
+        echo "$signature"
+        # r3con's Apple Developer team.
+        grep -qx 'TeamIdentifier=RJ895K26G5' <<<"$signature"
         verdict=$(spctl --assess --type execute --verbose=4 "$app" 2>&1) || { echo "$verdict"; exit 1; }
         echo "$verdict"
         grep -qx 'source=Notarized Developer ID' <<<"$verdict"

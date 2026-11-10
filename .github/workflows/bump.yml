@@ -34,15 +34,10 @@ jobs:
     if: needs.check.outputs.bump == 'true'
     runs-on: macos-15
     timeout-minutes: 20
-    permissions:
-      contents: write
     steps:
-      # The tap is a symlink to this checkout, so brew installs the cask as edited below. The
-      # token lets the push at the end authenticate; setup-homebrew masks it and removes it after.
+      # The tap is a symlink to this checkout, so brew installs the cask as edited below.
       - name: Set up Homebrew with this repository as its tap
         uses: Homebrew/actions/setup-homebrew@63a2d4d8d4193eab3e62b1b782ff3ab8408f5b29 # 2026.11.09.1
-        with:
-          token: ${{ github.token }}
       - name: Point the cask at the release
         env:
           VERSION: ${{ needs.check.outputs.version }}
@@ -50,6 +45,21 @@ jobs:
         run: .github/scripts/set-version.sh "$VERSION" "$DIGEST"
       - name: Check the cask
         uses: ./.github/actions/check-cask
+
+  push:
+    needs: [check, bump]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Point the cask at the release
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          DIGEST: ${{ needs.check.outputs.digest }}
+        run: .github/scripts/set-version.sh "$VERSION" "$DIGEST"
       - name: Commit and push to main
         env:
           VERSION: ${{ needs.check.outputs.version }}
