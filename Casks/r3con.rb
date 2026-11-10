@@ -1,8 +1,8 @@
 cask "r3con" do
-  version "0.6.12"
-  sha256 "9098a161fd715783483e6cd90e94f838fa59dbc49b2d5c5adb651a9ba915e59c"
+  version "0.6.13"
+  sha256 "876caf36e8fb56307ba505e2e272dc94ef60c4accbd7d3ca8d5ebed3a6a37701"
 
-  url "https://github.com/michaeltheologitis/r3con/releases/download/v#{version}/R3Con-#{version}.dmg"
+  url "https://github.com/michaeltheologitis/r3con/releases/download/v#{version}/R3Con.dmg"
   name "R3Con"
   desc "Answer questions whose evidence is spread across many documents"
   homepage "https://github.com/michaeltheologitis/r3con"
