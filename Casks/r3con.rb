@@ -20,6 +20,9 @@ cask "r3con" do
   zap trash: [
     "~/Library/Application Support/r3con",
     "~/Library/Caches/io.github.michaeltheologitis.r3con",
+    "~/Library/HTTPStorages/io.github.michaeltheologitis.r3con",
+    "~/Library/Preferences/io.github.michaeltheologitis.r3con.plist",
+    "~/Library/Saved Application State/io.github.michaeltheologitis.r3con.savedState",
     "~/Library/WebKit/io.github.michaeltheologitis.r3con",
   ]
 end

@@ -2,6 +2,7 @@ name: Test
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -10,6 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: macos-15
+    timeout-minutes: 20
     steps:
       - name: Set up Homebrew with this repository as its tap
         uses: Homebrew/actions/setup-homebrew@63a2d4d8d4193eab3e62b1b782ff3ab8408f5b29 # 2026.11.09.1
@@ -26,10 +28,10 @@ jobs:
         run: |
           app=/Applications/R3Con.app
           codesign --verify --deep --strict --verbose=2 "$app"
-          verdict=$(spctl --assess --type execute --verbose=4 "$app" 2>&1)
+          verdict=$(spctl --assess --type execute --verbose=4 "$app" 2>&1) || { echo "$verdict"; exit 1; }
           echo "$verdict"
           grep -qx 'source=Notarized Developer ID' <<<"$verdict"
-          installed=$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")
+          installed=$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist") || { echo "$installed"; exit 1; }
           cask=$(brew info --cask --json=v2 michaeltheologitis/r3con/r3con | jq -r '.casks[0].version')
           echo "installed: $installed, cask: $cask"
           [ "$installed" = "$cask" ]
