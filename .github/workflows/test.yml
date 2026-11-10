@@ -1,0 +1,65 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - name: Set up Homebrew with this repository as its tap
+        uses: Homebrew/actions/setup-homebrew@63a2d4d8d4193eab3e62b1b782ff3ab8408f5b29 # 2026.11.09.1
+      - name: Style
+        run: brew style michaeltheologitis/r3con
+      - name: Audit
+        run: brew audit --cask --strict --online michaeltheologitis/r3con/r3con
+      - name: Audit as a new cask
+        continue-on-error: true
+        run: brew audit --cask --new michaeltheologitis/r3con/r3con
+      # setup-homebrew trusts the whole tap; a user's first install trusts only the cask.
+      - name: Install as a user would
+        run: |
+          brew untrust michaeltheologitis/r3con
+          brew install michaeltheologitis/r3con/r3con
+      - name: Check the app's signature, notarization and version
+        run: |
+          app=/Applications/R3Con.app
+          codesign --verify --deep --strict --verbose=2 "$app"
+          verdict=$(spctl --assess --type execute --verbose=4 "$app" 2>&1)
+          echo "$verdict"
+          grep -qx 'source=Notarized Developer ID' <<<"$verdict"
+          installed=$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")
+          cask=$(brew info --cask --json=v2 michaeltheologitis/r3con/r3con | jq -r '.casks[0].version')
+          echo "installed: $installed, cask: $cask"
+          [ "$installed" = "$cask" ]
+      - name: Explore what the app writes, and what zap removes
+        run: |
+          app=/Applications/R3Con.app
+          xattr -l "$app"
+          plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist"
+          marker="$RUNNER_TEMP/marker"
+          touch "$marker"
+          sleep 1
+          "$app/Contents/MacOS/R3Con" &
+          pid=$!
+          for _ in $(seq 60); do
+            log show --last 2m --style compact --predicate 'process == "R3Con"' | grep -F '"GET /api/keys HTTP/1.1" 200' && break
+            sleep 2
+          done
+          sleep 5
+          osascript -e 'quit app id "io.github.michaeltheologitis.r3con"' &
+          for _ in $(seq 20); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+          kill "$pid" 2>/dev/null && echo "killed" || echo "quit"
+          wait "$pid" || true
+          echo "--- written under ~ since launch:"
+          find ~ -newer "$marker" -not -path "$HOME/work/*" -not -path "$HOME/Library/Logs/*" 2>/dev/null | grep -v -e '/Library/Biome/' -e '/Library/Metadata/' -e '/Library/Caches/com.apple' | sort | head -300
+          echo "--- under ~ by name or bundle id:"
+          find ~ -not -path "$HOME/work/*" \( -iname '*r3con*' -o -iname '*michaeltheologitis*' \) 2>/dev/null | sort
+          brew uninstall --cask --zap r3con
+          echo "--- left after zap:"
+          find ~ -not -path "$HOME/work/*" \( -iname '*r3con*' -o -iname '*michaeltheologitis*' \) 2>/dev/null | sort
+          test ! -e "$app"
