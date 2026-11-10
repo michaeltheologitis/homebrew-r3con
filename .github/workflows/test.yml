@@ -56,9 +56,11 @@ jobs:
           kill "$pid" 2>/dev/null && echo "killed" || echo "quit"
           wait "$pid" || true
           echo "--- written under ~ since launch:"
-          find ~ -newer "$marker" -not -path "$HOME/work/*" -not -path "$HOME/Library/Logs/*" 2>/dev/null | grep -v -e '/Library/Biome/' -e '/Library/Metadata/' -e '/Library/Caches/com.apple' | sort | head -300
+          find ~ -newer "$marker" -not -path "$HOME/work/*" -not -path "$HOME/actions-runner/*" -not -path "$HOME/Library/Caches/bazel/*" -not -path "$HOME/Library/Logs/*" -not -path "$HOME/Library/Biome/*" 2>/dev/null | sort
           echo "--- under ~ by name or bundle id:"
           find ~ -not -path "$HOME/work/*" \( -iname '*r3con*' -o -iname '*michaeltheologitis*' \) 2>/dev/null | sort
+          echo "--- inside the WebKit and Caches folders:"
+          find ~/Library/WebKit/io.github.michaeltheologitis.r3con ~/Library/Caches/io.github.michaeltheologitis.r3con | sort
           brew uninstall --cask --zap r3con
           echo "--- left after zap:"
           find ~ -not -path "$HOME/work/*" \( -iname '*r3con*' -o -iname '*michaeltheologitis*' \) 2>/dev/null | sort
