@@ -1,6 +1,6 @@
 cask "r3con" do
-  version "0.6.26"
-  sha256 "355b854aeb10a2ceef306d2a45a90401f6e2bb8f253c4e94215f170823d4b3e9"
+  version "0.6.27"
+  sha256 "b2543de369e58c9a5b8be22a2e4f0a7c1bcd535f661538b0448ff1eafbedc757"
 
   url "https://github.com/michaeltheologitis/r3con/releases/download/v#{version}/R3Con.dmg"
   name "R3Con"
