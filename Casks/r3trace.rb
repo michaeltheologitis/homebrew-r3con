@@ -1,11 +1,11 @@
-cask "r3con" do
+cask "r3trace" do
   version "0.6.50"
   sha256 "dedf05d4382f9860271fcf0618d65f421125133fa550221dfdb67aac8327a953"
 
-  url "https://github.com/michaeltheologitis/r3con/releases/download/v#{version}/R3Con.dmg"
-  name "R3Con"
+  url "https://github.com/michaeltheologitis/r3trace/releases/download/v#{version}/R3Trace.dmg"
+  name "R3Trace"
   desc "Answer questions whose evidence is spread across many documents"
-  homepage "https://github.com/michaeltheologitis/r3con"
+  homepage "https://github.com/michaeltheologitis/r3trace"
 
   livecheck do
     url :url
@@ -15,10 +15,11 @@ cask "r3con" do
   depends_on arch: :arm64
   depends_on :macos
 
-  app "R3Con.app"
+  app "R3Trace.app"
 
   zap trash: [
     "~/Library/Application Support/r3con",
+    "~/Library/Application Support/r3trace",
     "~/Library/Caches/io.github.michaeltheologitis.r3con",
     "~/Library/HTTPStorages/io.github.michaeltheologitis.r3con",
     "~/Library/Preferences/io.github.michaeltheologitis.r3con.plist",
