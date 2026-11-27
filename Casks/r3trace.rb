@@ -1,6 +1,6 @@
 cask "r3trace" do
-  version "0.6.53"
-  sha256 "67bfb4ee766533a9bc516aafd99c821d4ccc8b1ef5dae5e6db946333d15e0100"
+  version "0.6.55"
+  sha256 "13eb3b2174dcf1c5e8448b216bfa4ec5e5ef812b038b87c35ad1c9333020938d"
 
   url "https://github.com/michaeltheologitis/r3trace/releases/download/v#{version}/R3Trace.dmg"
   name "R3Trace"
